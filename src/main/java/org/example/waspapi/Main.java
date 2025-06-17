@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.License;
 import io.swagger.v3.oas.annotations.servers.Server;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @OpenAPIDefinition(
         info = @Info(
@@ -24,6 +25,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
                 @SecurityRequirement(name = "bearerAuth")  // nombre del esquema que declares en configuración
         }
 )
+@EnableAsync
 @SpringBootApplication
 public class Main {
     public static void main(String[] args) {
