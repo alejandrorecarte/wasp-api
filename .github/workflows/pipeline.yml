@@ -1,4 +1,4 @@
-name: Python CI with Docker, Pre-commit, Pytest & SonarQube
+name: SonarQube
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
         run: |
           pip install sonar-scanner-cli
           sonar-scanner \
-            -Dsonar.projectKey=my_project \
+            -Dsonar.projectKey=alejandrorecarte_wasp-api \
             -Dsonar.sources=. \
             -Dsonar.host.url=$SONAR_HOST_URL \
             -Dsonar.login=$SONAR_TOKEN
