@@ -6,84 +6,131 @@ import jakarta.persistence.*;
 @Table(name = "games", schema = "public")
 public class Game {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(nullable = false)
-    private String name;
+  @Column(nullable = false)
+  private String name;
 
-    @Column(columnDefinition = "text")
-    private String description;
+  @Column(columnDefinition = "text")
+  private String description;
 
-    @Column(name = "game_photo")
-    private String gamePhoto;
+  @Column(name = "game_photo")
+  private String gamePhoto;
 
-    @Column(name = "max_players")
-    private Short maxPlayers;
+  @Column(name = "max_players")
+  private Short maxPlayers;
 
-    @Column(name = "public")
-    private Boolean isPublic;
+  @Column(name = "public")
+  private Boolean isPublic;
 
-    @ManyToOne
-    @JoinColumn(name = "theme_id", foreignKey = @ForeignKey(name = "Games_theme_id_fkey"))
-    private Theme theme;
+  @ManyToOne
+  @JoinColumn(name = "theme_id", foreignKey = @ForeignKey(name = "Games_theme_id_fkey"))
+  private Theme theme;
 
-    // Getters y Setters
+  @Column(name = "is_deleted")
+  private Boolean isDeleted;
 
-    public Long getId() {
-        return id;
-    }
+  // Getters y Setters
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+  public Game() {}
 
-    public String getName() {
-        return name;
-    }
+  public Game(
+      String name,
+      String description,
+      String gamePhoto,
+      Short maxPlayers,
+      Boolean isPublic,
+      Theme theme) {
+    this.name = name;
+    this.description = description;
+    this.gamePhoto = gamePhoto;
+    this.maxPlayers = maxPlayers;
+    this.isPublic = isPublic;
+    this.theme = theme;
+    this.isDeleted = false;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public Game(
+      Long id,
+      String name,
+      String description,
+      String gamePhoto,
+      Short maxPlayers,
+      Boolean isPublic,
+      Theme theme) {
+    this.id = id;
+    this.name = name;
+    this.description = description;
+    this.gamePhoto = gamePhoto;
+    this.maxPlayers = maxPlayers;
+    this.isPublic = isPublic;
+    this.theme = theme;
+    this.isDeleted = false;
+  }
 
-    public String getDescription() {
-        return description;
-    }
+  public Long getId() {
+    return id;
+  }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-    public String getGamePhoto() {
-        return gamePhoto;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public void setGamePhoto(String gamePhoto) {
-        this.gamePhoto = gamePhoto;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public Short getMaxPlayers() {
-        return maxPlayers;
-    }
+  public String getDescription() {
+    return description;
+  }
 
-    public void setMaxPlayers(Short maxPlayers) {
-        this.maxPlayers = maxPlayers;
-    }
+  public void setDescription(String description) {
+    this.description = description;
+  }
 
-    public Boolean getIsPublic() {
-        return isPublic;
-    }
+  public String getGamePhoto() {
+    return gamePhoto;
+  }
 
-    public void setIsPublic(Boolean isPublic) {
-        this.isPublic = isPublic;
-    }
+  public void setGamePhoto(String gamePhoto) {
+    this.gamePhoto = gamePhoto;
+  }
 
-    public Theme getTheme() {
-        return theme;
-    }
+  public Short getMaxPlayers() {
+    return maxPlayers;
+  }
 
-    public void setTheme(Theme theme) {
-        this.theme = theme;
-    }
+  public void setMaxPlayers(Short maxPlayers) {
+    this.maxPlayers = maxPlayers;
+  }
+
+  public Boolean getIsPublic() {
+    return isPublic;
+  }
+
+  public void setIsPublic(Boolean isPublic) {
+    this.isPublic = isPublic;
+  }
+
+  public Theme getTheme() {
+    return theme;
+  }
+
+  public void setTheme(Theme theme) {
+    this.theme = theme;
+  }
+
+  public Boolean getIsDeleted() {
+    return isDeleted;
+  }
+
+  public void setIsDeleted(Boolean isDeleted) {
+    this.isDeleted = isDeleted;
+  }
 }

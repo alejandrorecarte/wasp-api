@@ -1,4 +1,4 @@
-package org.example.waspapi.controller.auth;
+package org.example.waspapi.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
