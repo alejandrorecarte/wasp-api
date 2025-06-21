@@ -164,7 +164,8 @@ public class GameController {
       @Valid @RequestBody UpdateGameRequest request) {
     try {
       logger.info("Updating game with ID: {} and request: {}", gameId, request);
-      if (!subscriptionService.isAdmin(jwt.getClaim(AUTH0_AUDIENCE_EMAIL).toString(), gameId)) {
+      String emailClaim = jwt.getClaim(AUTH0_AUDIENCE_EMAIL).toString();
+      if (!subscriptionService.isAdmin(emailClaim, gameId)) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
       }
       Game game = gameService.updateGame(gameId, request);
