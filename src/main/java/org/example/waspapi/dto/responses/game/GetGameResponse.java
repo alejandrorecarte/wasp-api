@@ -1,28 +1,29 @@
-package org.example.waspapi.dto.requests.game;
+package org.example.waspapi.dto.responses.game;
 
-import jakarta.validation.constraints.NotBlank;
+public class GetGameResponse {
 
-public class CreateGameRequest {
-
-  @NotBlank private String name;
-
+  private String name;
   private String description;
-
   private String gamePhoto;
-
   private Short maxPlayers;
-
   private Boolean isPublic;
+  private Long themeId;
 
-  public CreateGameRequest() {}
+  public GetGameResponse() {}
 
-  public CreateGameRequest(
-      String name, String description, String gamePhoto, Short maxPlayers, Boolean isPublic) {
+  public GetGameResponse(
+      String name,
+      String description,
+      String gamePhoto,
+      Short maxPlayers,
+      Boolean isPublic,
+      Long themeId) {
     this.name = name;
     this.description = description;
     this.gamePhoto = gamePhoto;
     this.maxPlayers = maxPlayers;
     this.isPublic = isPublic;
+    this.themeId = themeId;
   }
 
   public String getName() {
@@ -57,12 +58,12 @@ public class CreateGameRequest {
     this.maxPlayers = maxPlayers;
   }
 
-  public Boolean getPublic() {
+  public Boolean getIsPublic() {
     return isPublic;
   }
 
-  public void setPublic(Boolean aPublic) {
-    isPublic = aPublic;
+  public void setIsPublic(Boolean isPublic) {
+    this.isPublic = isPublic;
   }
 
   public Long getThemeId() {
@@ -72,6 +73,4 @@ public class CreateGameRequest {
   public void setThemeId(Long themeId) {
     this.themeId = themeId;
   }
-
-  private Long themeId;
 }
