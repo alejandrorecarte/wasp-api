@@ -4,5 +4,6 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: https://dev-448mv61fl0iy3dnj.us.auth0.com/
+          audiences: https://wasp-api
 server:
   port: 8080

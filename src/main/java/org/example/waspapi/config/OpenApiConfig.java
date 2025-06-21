@@ -1,4 +1,4 @@
-package org.example.waspapi;
+package org.example.waspapi.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
