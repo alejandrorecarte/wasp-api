@@ -3,7 +3,10 @@ package org.example.waspapi.service;
 import static org.example.waspapi.Constants.GAME_NOT_FOUND;
 import static org.example.waspapi.Constants.THEME_NOT_FOUND;
 
+import java.util.UUID;
 import org.example.waspapi.dto.requests.game.CreateGameRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.example.waspapi.dto.requests.game.UpdateGameRequest;
 import org.example.waspapi.exceptions.HandledException;
 import org.example.waspapi.model.Game;
@@ -79,7 +82,7 @@ public class GameService {
    * @return The updated Game object saved in the repository.
    * @throws HandledException If the game or the specified theme is not found.
    */
-  public Game updateGame(Long gameId, UpdateGameRequest request) {
+  public Game updateGame(UUID gameId, UpdateGameRequest request) {
     logger.debug("Updating game with ID: {}", gameId);
     Game game =
         gameRepository
@@ -118,7 +121,7 @@ public class GameService {
    * @return The Game object corresponding to the provided ID.
    * @throws HandledException If the game is not found in the repository.
    */
-  public Game getGameById(Long gameId) {
+  public Game getGameById(UUID gameId) {
     logger.debug("Fetching game by id: {}", gameId);
     return gameRepository
         .findById(gameId)
@@ -139,7 +142,7 @@ public class GameService {
    * @param gameId The unique identifier of the game to delete.
    * @throws HandledException If the game is not found in the repository.
    */
-  public void deleteGame(Long gameId) {
+  public void deleteGame(UUID gameId) {
     logger.debug("Deleting game with ID: {}", gameId);
     Game game =
         gameRepository
@@ -152,5 +155,9 @@ public class GameService {
     game.setIsDeleted(true);
     gameRepository.save(game);
     logger.info("Game marked as deleted: {}", gameId);
+  }
+
+  public Page<Game> getPublicGames(Pageable pageable) {
+    return gameRepository.findByIsPublicTrueAndIsDeletedFalse(pageable);
   }
 }

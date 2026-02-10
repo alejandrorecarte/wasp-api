@@ -1,13 +1,20 @@
 package org.example.waspapi.dto.requests.game;
 
+import java.util.UUID;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+
 public class UpdateGameRequest {
 
   private String name;
   private String description;
   private String gamePhoto;
+
+  @Min(1)
+  @Max(99)
   private Short maxPlayers;
   private Boolean isPublic;
-  private Long themeId;
+  private UUID themeId;
 
   public UpdateGameRequest() {}
 
@@ -17,7 +24,7 @@ public class UpdateGameRequest {
       String gamePhoto,
       Short maxPlayers,
       Boolean isPublic,
-      Long themeId) {
+      UUID themeId) {
     this.name = name;
     this.description = description;
     this.gamePhoto = gamePhoto;
@@ -66,11 +73,11 @@ public class UpdateGameRequest {
     this.isPublic = isPublic;
   }
 
-  public Long getThemeId() {
+  public UUID getThemeId() {
     return themeId;
   }
 
-  public void setThemeId(Long themeId) {
+  public void setThemeId(UUID themeId) {
     this.themeId = themeId;
   }
 }
