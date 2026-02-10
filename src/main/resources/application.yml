@@ -1,9 +1,7 @@
-spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: https://dev-448mv61fl0iy3dnj.us.auth0.com/
-          audiences: https://wasp-api
+supabase:
+  url: ${SUPABASE_URL:https://wxlacdktmfufkkcktbxy.supabase.co}
+  service-role-key: ${SUPABASE_SERVICE_ROLE_KEY}
+  jwt:
+    jwk-set-uri: ${JWT_JWK_SET_URI:https://wxlacdktmfufkkcktbxy.supabase.co/auth/v1/.well-known/jwks.json}
 server:
   port: 8080

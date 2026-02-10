@@ -1,28 +1,21 @@
 package org.example.waspapi.model;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 
 @Entity
-@Table(name = "subscriptions")
+@Table(name = "users_games")
+@IdClass(SubscriptionId.class)
 public class Subscription {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
-
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(
-      name = "game_id",
-      nullable = false,
-      foreignKey = @ForeignKey(name = "Subscriptions_game_id_fkey"))
-  private Game game;
-
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(
-      name = "user_email",
-      referencedColumnName = "email",
-      foreignKey = @ForeignKey(name = "Subscriptions_user_email_fkey"))
+  @JoinColumn(name = "email", referencedColumnName = "email")
   private User user;
+
+  @Id
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "game_id", referencedColumnName = "game_id")
+  private Game game;
 
   @Column(name = "game_nickname")
   private String gameNickname;
@@ -33,12 +26,12 @@ public class Subscription {
   @Column(name = "is_admin")
   private Boolean isAdmin;
 
-  public Long getId() {
-    return id;
+  public User getUser() {
+    return user;
   }
 
-  public void setId(Long id) {
-    this.id = id;
+  public void setUser(User user) {
+    this.user = user;
   }
 
   public Game getGame() {
@@ -47,14 +40,6 @@ public class Subscription {
 
   public void setGame(Game game) {
     this.game = game;
-  }
-
-  public User getUser() {
-    return user;
-  }
-
-  public void setUser(User user) {
-    this.user = user;
   }
 
   public String getGameNickname() {

@@ -1,6 +1,9 @@
 package org.example.waspapi.dto.requests.game;
 
-import jakarta.validation.constraints.NotBlank;
+import java.util.UUID;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
 
 public class CreateGameRequest {
 
@@ -10,6 +13,8 @@ public class CreateGameRequest {
 
   private String gamePhoto;
 
+  @Min(1)
+  @Max(99)
   private Short maxPlayers;
 
   private Boolean isPublic;
@@ -65,13 +70,13 @@ public class CreateGameRequest {
     isPublic = aPublic;
   }
 
-  public Long getThemeId() {
+  public UUID getThemeId() {
     return themeId;
   }
 
-  public void setThemeId(Long themeId) {
+  public void setThemeId(UUID themeId) {
     this.themeId = themeId;
   }
 
-  private Long themeId;
+  private UUID themeId;
 }

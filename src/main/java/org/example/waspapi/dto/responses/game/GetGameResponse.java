@@ -1,5 +1,7 @@
 package org.example.waspapi.dto.responses.game;
 
+import java.util.UUID;
+
 public class GetGameResponse {
 
   private String name;
@@ -7,7 +9,7 @@ public class GetGameResponse {
   private String gamePhoto;
   private Short maxPlayers;
   private Boolean isPublic;
-  private Long themeId;
+  private UUID themeId;
 
   public GetGameResponse() {}
 
@@ -17,7 +19,7 @@ public class GetGameResponse {
       String gamePhoto,
       Short maxPlayers,
       Boolean isPublic,
-      Long themeId) {
+      UUID themeId) {
     this.name = name;
     this.description = description;
     this.gamePhoto = gamePhoto;
@@ -66,11 +68,11 @@ public class GetGameResponse {
     this.isPublic = isPublic;
   }
 
-  public Long getThemeId() {
+  public UUID getThemeId() {
     return themeId;
   }
 
-  public void setThemeId(Long themeId) {
+  public void setThemeId(UUID themeId) {
     this.themeId = themeId;
   }
 }

@@ -1,9 +1,11 @@
 package org.example.waspapi.dto.requests.subscription;
 
+import java.util.UUID;
+
 public class CreateSubscriptionRequest {
 
   private String userEmail;
-  private Long gameId;
+  private UUID gameId;
   private String gameNickname;
   private String role;
   private Boolean isAdmin;
@@ -11,7 +13,7 @@ public class CreateSubscriptionRequest {
   public CreateSubscriptionRequest() {}
 
   public CreateSubscriptionRequest(
-      String userEmail, Long gameId, String gameNickname, String role, Boolean isAdmin) {
+      String userEmail, UUID gameId, String gameNickname, String role, Boolean isAdmin) {
     this.userEmail = userEmail;
     this.gameId = gameId;
     this.gameNickname = gameNickname;
@@ -27,11 +29,11 @@ public class CreateSubscriptionRequest {
     this.userEmail = userEmail;
   }
 
-  public Long getGameId() {
+  public UUID getGameId() {
     return gameId;
   }
 
-  public void setGameId(Long gameId) {
+  public void setGameId(UUID gameId) {
     this.gameId = gameId;
   }
 

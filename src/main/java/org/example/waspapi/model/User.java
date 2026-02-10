@@ -1,6 +1,6 @@
 package org.example.waspapi.model;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "users")

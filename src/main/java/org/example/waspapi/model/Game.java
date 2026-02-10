@@ -1,14 +1,16 @@
 package org.example.waspapi.model;
 
-import jakarta.persistence.*;
+import java.util.UUID;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "games", schema = "public")
 public class Game {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  @GeneratedValue
+  @Column(name = "game_id", updatable = false, nullable = false)
+  private UUID id;
 
   @Column(nullable = false)
   private String name;
@@ -26,13 +28,11 @@ public class Game {
   private Boolean isPublic;
 
   @ManyToOne
-  @JoinColumn(name = "theme_id", foreignKey = @ForeignKey(name = "Games_theme_id_fkey"))
+  @JoinColumn(name = "theme_id", foreignKey = @ForeignKey(name = "games_theme_id_fkey"))
   private Theme theme;
 
   @Column(name = "is_deleted")
-  private Boolean isDeleted;
-
-  // Getters y Setters
+  private Boolean isDeleted = false;
 
   public Game() {}
 
@@ -52,29 +52,11 @@ public class Game {
     this.isDeleted = false;
   }
 
-  public Game(
-      Long id,
-      String name,
-      String description,
-      String gamePhoto,
-      Short maxPlayers,
-      Boolean isPublic,
-      Theme theme) {
-    this.id = id;
-    this.name = name;
-    this.description = description;
-    this.gamePhoto = gamePhoto;
-    this.maxPlayers = maxPlayers;
-    this.isPublic = isPublic;
-    this.theme = theme;
-    this.isDeleted = false;
-  }
-
-  public Long getId() {
+  public UUID getId() {
     return id;
   }
 
-  public void setId(Long id) {
+  public void setId(UUID id) {
     this.id = id;
   }
 
