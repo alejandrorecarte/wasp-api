@@ -1,14 +1,16 @@
 package org.example.waspapi.model;
 
-import jakarta.persistence.*;
+import java.util.UUID;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "themes", schema = "public")
 public class Theme {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  @GeneratedValue
+  @Column(name = "theme_id", updatable = false, nullable = false)
+  private UUID id;
 
   @Column(nullable = false)
   private String name;
@@ -19,13 +21,11 @@ public class Theme {
   @Column(name = "theme_photo")
   private String themePhoto;
 
-  // Getters y Setters
-
-  public Long getId() {
+  public UUID getId() {
     return id;
   }
 
-  public void setId(Long id) {
+  public void setId(UUID id) {
     this.id = id;
   }
 
