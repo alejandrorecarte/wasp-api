@@ -156,9 +156,32 @@ public class GameController {
       @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
       @PathVariable UUID gameId,
       @Valid @RequestBody UpdateGameRequest request) {
-    logger.info("Updating game with ID: {}", gameId);
-    if (!subscriptionService.isAdmin(jwt.getClaim(SUPABASE_EMAIL_CLAIM).toString(), gameId)) {
-      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    try {
+      logger.info("Updating game with ID: {} and request: {}", gameId, request);
+      String emailClaim = jwt.getClaim(AUTH0_AUDIENCE_EMAIL).toString();
+      if (!subscriptionService.isAdmin(emailClaim, gameId)) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
+      Game game = gameService.updateGame(gameId, request);
+
+      logger.info("Game with ID {} updated successfully", gameId);
+
+      UpdateGameResponse response =
+          new UpdateGameResponse(
+              game.getName(),
+              game.getDescription(),
+              game.getGamePhoto(),
+              game.getMaxPlayers(),
+              game.getIsPublic(),
+              game.getTheme() == null ? null : game.getTheme().getId());
+      logger.info("Game updated response: {}", response);
+      return ResponseEntity.ok(response);
+    } catch (HandledException e) {
+      logger.error("Handled exception while update game: {}", e.getMessage());
+      return ResponseEntity.status(e.getStatusCode()).body(null);
+    } catch (Exception e) {
+      logger.error("Error updating game: {}", e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
     Game game = gameService.updateGame(gameId, request);
 
