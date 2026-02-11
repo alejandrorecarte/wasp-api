@@ -31,6 +31,10 @@ public class Game {
   @JoinColumn(name = "theme_id", foreignKey = @ForeignKey(name = "games_theme_id_fkey"))
   private Theme theme;
 
+  @ManyToOne
+  @JoinColumn(name = "master_user_id", foreignKey = @ForeignKey(name = "games_master_user_id_fkey"))
+  private User masterUser;
+
   @Column(name = "is_deleted")
   private Boolean isDeleted = false;
 
@@ -106,6 +110,14 @@ public class Game {
 
   public void setTheme(Theme theme) {
     this.theme = theme;
+  }
+
+  public User getMasterUser() {
+    return masterUser;
+  }
+
+  public void setMasterUser(User masterUser) {
+    this.masterUser = masterUser;
   }
 
   public Boolean getIsDeleted() {

@@ -46,33 +46,22 @@ public class SubscriptionService {
    * @throws HandledException If the user or the game are not found.
    */
   public Subscription createSubscription(CreateSubscriptionRequest request) {
-    if (!userRepository.findByEmail(request.getUserEmail()).isPresent()) {
-      throw new HandledException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
-    }
-    if (!gameRepository.findById(request.getGameId()).isPresent()) {
-      throw new HandledException(GAME_NOT_FOUND, HttpStatus.NOT_FOUND);
-    }
+    User user =
+        userRepository
+            .findById(request.getUserId())
+            .orElseThrow(() -> new HandledException(USER_NOT_FOUND, HttpStatus.NOT_FOUND));
+    Game game =
+        gameRepository
+            .findById(request.getGameId())
+            .orElseThrow(() -> new HandledException(GAME_NOT_FOUND, HttpStatus.NOT_FOUND));
 
     Subscription subscription = new Subscription();
+    subscription.setUser(user);
+    subscription.setGame(game);
     subscription.setGameNickname(request.getGameNickname());
     subscription.setRole(request.getRole());
     subscription.setAdmin(request.getAdmin());
 
-    if (request.getUserEmail() != null) {
-      User user =
-          userRepository
-              .findById(request.getUserEmail())
-              .orElseThrow(() -> new HandledException(USER_NOT_FOUND, HttpStatus.NOT_FOUND));
-      subscription.setUser(user);
-    }
-
-    if (request.getGameId() != null) {
-      Game game =
-          gameRepository
-              .findById(request.getGameId())
-              .orElseThrow(() -> new HandledException(GAME_NOT_FOUND, HttpStatus.NOT_FOUND));
-      subscription.setGame(game);
-    }
     return subscriptionRepository.save(subscription);
   }
 
@@ -86,26 +75,24 @@ public class SubscriptionService {
    * @param gameId The unique identifier of the game.
    * @return true if the user is subscribed to the game, false otherwise.
    */
-  public boolean isSubscribed(String userEmail, UUID gameId) {
-    return subscriptionRepository.existsByUserEmailAndGameId(userEmail, gameId);
+  public boolean isSubscribed(UUID userId, UUID gameId) {
+    return subscriptionRepository.existsByUserIdAndGameId(userId, gameId);
   }
 
-  /**
-   * Checks if a user is an admin for a specific game.
-   *
-   * <p>This method searches the subscription repository and verifies if there is any subscription
-   * that matches the provided user's email, game ID, and admin status.
-   *
-   * @param userEmail The email of the user.
-   * @param gameId The unique identifier of the game.
-   * @return true if the user is an admin for the game, false otherwise.
-   */
-  public boolean isAdmin(String userEmail, UUID gameId) {
-    return subscriptionRepository.existsByUserEmailAndGameIdAndIsAdminTrue(userEmail, gameId);
+  public boolean isAdmin(UUID userId, UUID gameId) {
+    return subscriptionRepository.existsByUserIdAndGameIdAndIsAdminTrue(userId, gameId);
   }
 
-  public List<Game> getGamesByUserEmail(String userEmail) {
-    return subscriptionRepository.findByUserEmail(userEmail).stream()
+  public long countPlayersByGameId(UUID gameId) {
+    return subscriptionRepository.countByGameId(gameId);
+  }
+
+  public List<Subscription> getSubscriptionsByGameId(UUID gameId) {
+    return subscriptionRepository.findByGameId(gameId);
+  }
+
+  public List<Game> getGamesByUserId(UUID userId) {
+    return subscriptionRepository.findByUserId(userId).stream()
         .map(Subscription::getGame)
         .filter(game -> !Boolean.TRUE.equals(game.getIsDeleted()))
         .collect(Collectors.toList());

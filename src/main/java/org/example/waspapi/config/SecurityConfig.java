@@ -37,9 +37,7 @@ public class SecurityConfig {
 
   @Bean
   public JwtDecoder jwtDecoder() {
-    return NimbusJwtDecoder.withJwkSetUri(jwkSetUri)
-        .jwsAlgorithm(SignatureAlgorithm.ES256)
-        .build();
+    return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).jwsAlgorithm(SignatureAlgorithm.ES256).build();
   }
 
   @Bean

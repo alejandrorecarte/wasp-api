@@ -8,26 +8,20 @@ public class UpdateGameRequest {
 
   private String name;
   private String description;
-  private String gamePhoto;
 
   @Min(1)
   @Max(99)
   private Short maxPlayers;
+
   private Boolean isPublic;
   private UUID themeId;
 
   public UpdateGameRequest() {}
 
   public UpdateGameRequest(
-      String name,
-      String description,
-      String gamePhoto,
-      Short maxPlayers,
-      Boolean isPublic,
-      UUID themeId) {
+      String name, String description, Short maxPlayers, Boolean isPublic, UUID themeId) {
     this.name = name;
     this.description = description;
-    this.gamePhoto = gamePhoto;
     this.maxPlayers = maxPlayers;
     this.isPublic = isPublic;
     this.themeId = themeId;
@@ -47,14 +41,6 @@ public class UpdateGameRequest {
 
   public void setDescription(String description) {
     this.description = description;
-  }
-
-  public String getGamePhoto() {
-    return gamePhoto;
-  }
-
-  public void setGamePhoto(String gamePhoto) {
-    this.gamePhoto = gamePhoto;
   }
 
   public Short getMaxPlayers() {

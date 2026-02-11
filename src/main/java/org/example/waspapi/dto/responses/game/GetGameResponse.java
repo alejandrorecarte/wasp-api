@@ -1,31 +1,52 @@
 package org.example.waspapi.dto.responses.game;
 
+import java.util.List;
 import java.util.UUID;
 
 public class GetGameResponse {
 
+  private UUID gameId;
   private String name;
   private String description;
   private String gamePhoto;
   private Short maxPlayers;
   private Boolean isPublic;
-  private UUID themeId;
+  private String themeName;
+  private UUID masterUserId;
+  private long playerCount;
+  private List<PlayerInfo> players;
 
   public GetGameResponse() {}
 
   public GetGameResponse(
+      UUID gameId,
       String name,
       String description,
       String gamePhoto,
       Short maxPlayers,
       Boolean isPublic,
-      UUID themeId) {
+      String themeName,
+      UUID masterUserId,
+      long playerCount,
+      List<PlayerInfo> players) {
+    this.gameId = gameId;
     this.name = name;
     this.description = description;
     this.gamePhoto = gamePhoto;
     this.maxPlayers = maxPlayers;
     this.isPublic = isPublic;
-    this.themeId = themeId;
+    this.themeName = themeName;
+    this.masterUserId = masterUserId;
+    this.playerCount = playerCount;
+    this.players = players;
+  }
+
+  public UUID getGameId() {
+    return gameId;
+  }
+
+  public void setGameId(UUID gameId) {
+    this.gameId = gameId;
   }
 
   public String getName() {
@@ -68,11 +89,84 @@ public class GetGameResponse {
     this.isPublic = isPublic;
   }
 
-  public UUID getThemeId() {
-    return themeId;
+  public String getThemeName() {
+    return themeName;
   }
 
-  public void setThemeId(UUID themeId) {
-    this.themeId = themeId;
+  public void setThemeName(String themeName) {
+    this.themeName = themeName;
+  }
+
+  public UUID getMasterUserId() {
+    return masterUserId;
+  }
+
+  public void setMasterUserId(UUID masterUserId) {
+    this.masterUserId = masterUserId;
+  }
+
+  public long getPlayerCount() {
+    return playerCount;
+  }
+
+  public void setPlayerCount(long playerCount) {
+    this.playerCount = playerCount;
+  }
+
+  public List<PlayerInfo> getPlayers() {
+    return players;
+  }
+
+  public void setPlayers(List<PlayerInfo> players) {
+    this.players = players;
+  }
+
+  public static class PlayerInfo {
+
+    private UUID userId;
+    private String nickname;
+    private String role;
+    private String profilePhoto;
+
+    public PlayerInfo() {}
+
+    public PlayerInfo(UUID userId, String nickname, String role, String profilePhoto) {
+      this.userId = userId;
+      this.nickname = nickname;
+      this.role = role;
+      this.profilePhoto = profilePhoto;
+    }
+
+    public UUID getUserId() {
+      return userId;
+    }
+
+    public void setUserId(UUID userId) {
+      this.userId = userId;
+    }
+
+    public String getNickname() {
+      return nickname;
+    }
+
+    public void setNickname(String nickname) {
+      this.nickname = nickname;
+    }
+
+    public String getRole() {
+      return role;
+    }
+
+    public void setRole(String role) {
+      this.role = role;
+    }
+
+    public String getProfilePhoto() {
+      return profilePhoto;
+    }
+
+    public void setProfilePhoto(String profilePhoto) {
+      this.profilePhoto = profilePhoto;
+    }
   }
 }

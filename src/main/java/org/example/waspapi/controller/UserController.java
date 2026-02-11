@@ -5,6 +5,7 @@ import static org.example.waspapi.Constants.SUPABASE_EMAIL_CLAIM;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.UUID;
 import javax.validation.Valid;
 import org.example.waspapi.dto.requests.users.RegisterUserRequest;
 import org.example.waspapi.dto.requests.users.UpdateUserRequest;
@@ -40,9 +41,10 @@ public class UserController {
       operationId = "userLogin")
   @GetMapping("/login")
   public ResponseEntity<User> login(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
+    UUID userId = UUID.fromString(jwt.getSubject());
     String email = jwt.getClaim(SUPABASE_EMAIL_CLAIM).toString();
     logger.info("User login attempt for email: {}", email);
-    User user = userService.getOrCreate(email);
+    User user = userService.getOrCreate(userId, email);
 
     logger.info("User logged in successfully: {}", user.getEmail());
     return ResponseEntity.ok(user);
@@ -58,16 +60,16 @@ public class UserController {
   public ResponseEntity<User> register(
       @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
       @Valid @RequestBody RegisterUserRequest request) {
+    UUID userId = UUID.fromString(jwt.getSubject());
     String email = jwt.getClaim(SUPABASE_EMAIL_CLAIM).toString();
-    String userId = jwt.getSubject();
     logger.info("User registration attempt for email: {}", email);
     try {
-      User user = userService.register(email, request);
+      User user = userService.register(userId, email, request);
       logger.info("User registered successfully: {}", user.getEmail());
       return ResponseEntity.ok(user);
     } catch (Exception e) {
       logger.error("Registration failed for email: {}. Deleting Supabase Auth user.", email);
-      supabaseAuthService.deleteUser(userId);
+      supabaseAuthService.deleteUser(userId.toString());
       throw e;
     }
   }
@@ -81,9 +83,9 @@ public class UserController {
   public ResponseEntity<User> updateUser(
       @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
       @RequestBody UpdateUserRequest request) {
-    String email = jwt.getClaim(SUPABASE_EMAIL_CLAIM).toString();
-    logger.info("Updating user with email: {}", email);
-    User updated = userService.update(email, request);
+    UUID userId = UUID.fromString(jwt.getSubject());
+    logger.info("Updating user with id: {}", userId);
+    User updated = userService.update(userId, request);
 
     logger.info("User updated successfully: {}", updated.getEmail());
     return ResponseEntity.ok(updated);
@@ -96,11 +98,11 @@ public class UserController {
       operationId = "getAuthenticatedUser")
   @GetMapping("/me")
   public ResponseEntity<User> getMe(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
-    String auth0Email = jwt.getClaim(SUPABASE_EMAIL_CLAIM).toString();
-    logger.info("Fetch me with email: {}", auth0Email);
-    User user = userService.get(auth0Email);
+    UUID userId = UUID.fromString(jwt.getSubject());
+    logger.info("Fetch me with id: {}", userId);
+    User user = userService.get(userId);
     if (user == null) {
-      logger.error("Me not found for email: {}", auth0Email);
+      logger.error("Me not found for id: {}", userId);
       return ResponseEntity.notFound().build();
     }
 
@@ -109,27 +111,19 @@ public class UserController {
   }
 
   @Operation(
-      summary = "Get user by email",
-      description =
-          "Endpoint to retrieve a user's information by their email using JWT authentication.",
-      operationId = "getUserByEmail")
-  @GetMapping("/{email}")
+      summary = "Get user by nickname",
+      description = "Endpoint to retrieve a user's ID and profile photo by their nickname.",
+      operationId = "getUserByNickname")
+  @GetMapping("/{nickname}")
   public ResponseEntity<GetUserResponse> getUser(
-      @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
-      @PathVariable String email) {
-    logger.info("Fetching user with email: {}", email);
-    User user = userService.get(email);
+      @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @PathVariable String nickname) {
+    logger.info("Fetching user with nickname: {}", nickname);
+    User user = userService.getByNickname(nickname);
     if (user == null) {
-      logger.error("User not found for email: {}", email);
+      logger.error("User not found for nickname: {}", nickname);
       return ResponseEntity.notFound().build();
     }
-    GetUserResponse response =
-        new GetUserResponse(
-            user.getNickname(),
-            user.getBio(),
-            user.getPreference(),
-            user.getDisponibility(),
-            user.getProfilePhoto());
+    GetUserResponse response = new GetUserResponse(user.getId(), user.getProfilePhoto());
     return ResponseEntity.ok(response);
   }
 }

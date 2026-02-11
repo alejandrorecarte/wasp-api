@@ -9,7 +9,9 @@ public class UpdateGameResponse {
   private String gamePhoto;
   private Short maxPlayers;
   private Boolean isPublic;
-  private UUID themeId;
+  private String themeName;
+  private UUID masterUserId;
+  private long playerCount;
 
   public UpdateGameResponse() {}
 
@@ -19,13 +21,17 @@ public class UpdateGameResponse {
       String gamePhoto,
       Short maxPlayers,
       Boolean isPublic,
-      UUID themeId) {
+      String themeName,
+      UUID masterUserId,
+      long playerCount) {
     this.name = name;
     this.description = description;
     this.gamePhoto = gamePhoto;
     this.maxPlayers = maxPlayers;
     this.isPublic = isPublic;
-    this.themeId = themeId;
+    this.themeName = themeName;
+    this.masterUserId = masterUserId;
+    this.playerCount = playerCount;
   }
 
   public String getName() {
@@ -68,11 +74,27 @@ public class UpdateGameResponse {
     this.isPublic = isPublic;
   }
 
-  public UUID getThemeId() {
-    return themeId;
+  public String getThemeName() {
+    return themeName;
   }
 
-  public void setThemeId(UUID themeId) {
-    this.themeId = themeId;
+  public void setThemeName(String themeName) {
+    this.themeName = themeName;
+  }
+
+  public UUID getMasterUserId() {
+    return masterUserId;
+  }
+
+  public void setMasterUserId(UUID masterUserId) {
+    this.masterUserId = masterUserId;
+  }
+
+  public long getPlayerCount() {
+    return playerCount;
+  }
+
+  public void setPlayerCount(long playerCount) {
+    this.playerCount = playerCount;
   }
 }

@@ -5,6 +5,7 @@ import static org.example.waspapi.Constants.USER_ALREADY_EXISTS;
 import static org.example.waspapi.Constants.USER_NOT_FOUND;
 
 import java.util.Optional;
+import java.util.UUID;
 import org.example.waspapi.dto.requests.users.RegisterUserRequest;
 import org.example.waspapi.dto.requests.users.UpdateUserRequest;
 import org.example.waspapi.exceptions.HandledException;
@@ -32,13 +33,13 @@ public class UserService {
    * @param email The email of the user to retrieve or create.
    * @return The User object, either retrieved from the repository or newly created.
    */
-  public User getOrCreate(String email) {
+  public User getOrCreate(UUID userId, String email) {
     return userRepository
-        .findByEmail(email)
+        .findById(userId)
         .orElseGet(
             () -> {
               String nickname = email.split("@")[0] + Math.random() * 1000;
-              User newUser = new User(email, nickname);
+              User newUser = new User(userId, email, nickname);
               return userRepository.save(newUser);
             });
   }
@@ -52,8 +53,12 @@ public class UserService {
    * @param email The email of the user to retrieve.
    * @return The User object if found, or null if no user exists with the given email.
    */
-  public User get(String email) {
-    return userRepository.findByEmail(email).orElseGet(() -> null);
+  public User get(UUID userId) {
+    return userRepository.findById(userId).orElse(null);
+  }
+
+  public User getByNickname(String nickname) {
+    return userRepository.findByNickname(nickname).orElse(null);
   }
 
   /**
@@ -68,7 +73,7 @@ public class UserService {
    * @return The updated User object saved in the repository.
    * @throws HandledException If the user is not found in the repository.
    */
-  public User register(String email, RegisterUserRequest request) {
+  public User register(UUID userId, String email, RegisterUserRequest request) {
     Optional<User> existingUserOpt = userRepository.findByEmail(email);
     if (existingUserOpt.isPresent()) {
       throw new HandledException(USER_ALREADY_EXISTS, HttpStatus.CONFLICT);
@@ -77,7 +82,7 @@ public class UserService {
       throw new HandledException(NICKNAME_ALREADY_EXISTS, HttpStatus.CONFLICT);
     }
 
-    User newUser = new User(email, request.getNickname());
+    User newUser = new User(userId, email, request.getNickname());
     newUser.setBio(request.getBio());
     newUser.setPreference(request.getPreference());
     newUser.setDisponibility(request.getDisponibility());
@@ -86,8 +91,8 @@ public class UserService {
     return userRepository.save(newUser);
   }
 
-  public User update(String email, UpdateUserRequest request) {
-    Optional<User> existingUserOpt = userRepository.findById(email);
+  public User update(UUID userId, UpdateUserRequest request) {
+    Optional<User> existingUserOpt = userRepository.findById(userId);
     if (!existingUserOpt.isPresent()) {
       throw new HandledException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
     }

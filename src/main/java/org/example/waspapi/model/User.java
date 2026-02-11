@@ -1,5 +1,6 @@
 package org.example.waspapi.model;
 
+import java.util.UUID;
 import javax.persistence.*;
 
 @Entity
@@ -7,8 +8,19 @@ import javax.persistence.*;
 public class User {
 
   @Id
-  @Column(nullable = false)
+  @Column(name = "user_id", updatable = false, nullable = false)
+  private UUID id;
+
+  @Column(nullable = false, unique = true)
   private String email;
+
+  public UUID getId() {
+    return id;
+  }
+
+  public void setId(UUID id) {
+    this.id = id;
+  }
 
   public String getEmail() {
     return email;
@@ -73,7 +85,8 @@ public class User {
   // Constructores
   public User() {}
 
-  public User(String email, String nickname) {
+  public User(UUID id, String email, String nickname) {
+    this.id = id;
     this.email = email;
     this.nickname = nickname;
   }
