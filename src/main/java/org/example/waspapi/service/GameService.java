@@ -1,20 +1,24 @@
 package org.example.waspapi.service;
 
 import static org.example.waspapi.Constants.GAME_NOT_FOUND;
+import static org.example.waspapi.Constants.PHOTO_UPLOAD_FAILED;
 import static org.example.waspapi.Constants.THEME_NOT_FOUND;
+import static org.example.waspapi.Constants.USER_NOT_FOUND;
 
 import java.util.UUID;
 import org.example.waspapi.dto.requests.game.CreateGameRequest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.example.waspapi.dto.requests.game.UpdateGameRequest;
 import org.example.waspapi.exceptions.HandledException;
 import org.example.waspapi.model.Game;
 import org.example.waspapi.model.Theme;
+import org.example.waspapi.model.User;
 import org.example.waspapi.repository.GameRepository;
 import org.example.waspapi.repository.ThemeRepository;
+import org.example.waspapi.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -24,33 +28,40 @@ public class GameService {
   private static final Logger logger = LoggerFactory.getLogger(GameService.class);
   private final GameRepository gameRepository;
   private final ThemeRepository themeRepository;
+  private final UserRepository userRepository;
+  private final SupabaseStorageService storageService;
 
-  public GameService(GameRepository gameRepository, ThemeRepository themeRepository) {
+  private static final String GAME_PHOTOS_BUCKET = "game-photos";
+
+  public GameService(
+      GameRepository gameRepository,
+      ThemeRepository themeRepository,
+      UserRepository userRepository,
+      SupabaseStorageService storageService) {
     this.gameRepository = gameRepository;
     this.themeRepository = themeRepository;
+    this.userRepository = userRepository;
+    this.storageService = storageService;
   }
 
-  /**
-   * Creates a new game in the system.
-   *
-   * <p>This method takes a request object containing the details of the game to be created, such as
-   * name, description, game photo, maximum number of players, public visibility, and optionally an
-   * associated theme. If a theme ID is provided, it validates that the theme exists. Throws an
-   * exception if the theme is not found.
-   *
-   * @param request A CreateGameRequest object containing the details of the game to be created.
-   * @return The Game object created and saved in the repository.
-   * @throws HandledException If the specified theme is not found.
-   */
-  public Game createGame(CreateGameRequest request) {
+  public Game createGame(CreateGameRequest request, UUID masterUserId) {
     logger.debug("Creating game with name: {}", request.getName());
     Game game = new Game();
     game.setName(request.getName());
     game.setDescription(request.getDescription());
-    game.setGamePhoto(request.getGamePhoto());
     game.setMaxPlayers(request.getMaxPlayers());
     game.setIsPublic(request.getPublic());
     game.setIsDeleted(false);
+
+    User masterUser =
+        userRepository
+            .findById(masterUserId)
+            .orElseThrow(
+                () -> {
+                  logger.warn("Master user not found: {}", masterUserId);
+                  return new HandledException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
+                });
+    game.setMasterUser(masterUser);
 
     if (request.getThemeId() != null) {
       Theme theme =
@@ -69,19 +80,6 @@ public class GameService {
     return gameRepository.save(game);
   }
 
-  /**
-   * Updates an existing game in the system.
-   *
-   * <p>This method retrieves a game by its ID and updates its details based on the provided request
-   * object. If the game is not found, it throws an exception. Optionally, if a theme ID is
-   * provided, it validates that the theme exists and associates it with the game. Throws an
-   * exception if the theme is not found.
-   *
-   * @param gameId The ID of the game to be updated.
-   * @param request An UpdateGameRequest object containing the new details for the game.
-   * @return The updated Game object saved in the repository.
-   * @throws HandledException If the game or the specified theme is not found.
-   */
   public Game updateGame(UUID gameId, UpdateGameRequest request) {
     logger.debug("Updating game with ID: {}", gameId);
     Game game =
@@ -89,11 +87,18 @@ public class GameService {
             .findById(gameId)
             .orElseThrow(() -> new HandledException(GAME_NOT_FOUND, HttpStatus.NOT_FOUND));
 
-    game.setName(request.getName());
-    game.setDescription(request.getDescription());
-    game.setGamePhoto(request.getGamePhoto());
-    game.setMaxPlayers(request.getMaxPlayers());
-    game.setIsPublic(request.getIsPublic());
+    if (request.getName() != null) {
+      game.setName(request.getName());
+    }
+    if (request.getDescription() != null) {
+      game.setDescription(request.getDescription());
+    }
+    if (request.getMaxPlayers() != null) {
+      game.setMaxPlayers(request.getMaxPlayers());
+    }
+    if (request.getIsPublic() != null) {
+      game.setIsPublic(request.getIsPublic());
+    }
 
     if (request.getThemeId() != null) {
       Theme theme =
@@ -111,16 +116,6 @@ public class GameService {
     return gameRepository.save(game);
   }
 
-  /**
-   * Retrieves a game by its ID.
-   *
-   * <p>This method fetches a game from the repository using its unique identifier. If the game is
-   * not found, it throws a HandledException with a 404 Not Found status.
-   *
-   * @param gameId The unique identifier of the game to retrieve.
-   * @return The Game object corresponding to the provided ID.
-   * @throws HandledException If the game is not found in the repository.
-   */
   public Game getGameById(UUID gameId) {
     logger.debug("Fetching game by id: {}", gameId);
     return gameRepository
@@ -132,16 +127,6 @@ public class GameService {
             });
   }
 
-  /**
-   * ted in the system.
-   *
-   * <p>Marks a game as dele This method retrieves a game by its ID and sets its "isDeleted"
-   * property to true. If the game is not found, it throws a HandledException with a 404 Not Found
-   * status.
-   *
-   * @param gameId The unique identifier of the game to delete.
-   * @throws HandledException If the game is not found in the repository.
-   */
   public void deleteGame(UUID gameId) {
     logger.debug("Deleting game with ID: {}", gameId);
     Game game =
@@ -157,7 +142,45 @@ public class GameService {
     logger.info("Game marked as deleted: {}", gameId);
   }
 
-  public Page<Game> getPublicGames(Pageable pageable) {
-    return gameRepository.findByIsPublicTrueAndIsDeletedFalse(pageable);
+  public Page<Game> getPublicGames(String name, String themeName, Pageable pageable) {
+    return gameRepository.findPublicGamesWithFilters(name, themeName, pageable);
+  }
+
+  public String uploadPhoto(UUID gameId, byte[] data, String contentType) {
+    Game game =
+        gameRepository
+            .findById(gameId)
+            .orElseThrow(() -> new HandledException(GAME_NOT_FOUND, HttpStatus.NOT_FOUND));
+
+    String path = gameId.toString();
+    try {
+      storageService.upload(GAME_PHOTOS_BUCKET, path, data, contentType);
+    } catch (Exception e) {
+      logger.error("Failed to upload photo for game {}: {}", gameId, e.getMessage());
+      throw new HandledException(PHOTO_UPLOAD_FAILED, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    game.setGamePhoto(path);
+    gameRepository.save(game);
+    logger.info("Photo uploaded for game: {}", gameId);
+    return storageService.getPublicUrl(GAME_PHOTOS_BUCKET, path);
+  }
+
+  public void deletePhoto(UUID gameId) {
+    Game game =
+        gameRepository
+            .findById(gameId)
+            .orElseThrow(() -> new HandledException(GAME_NOT_FOUND, HttpStatus.NOT_FOUND));
+
+    if (game.getGamePhoto() != null) {
+      try {
+        storageService.delete(GAME_PHOTOS_BUCKET, game.getGamePhoto());
+      } catch (Exception e) {
+        logger.error("Failed to delete photo for game {}: {}", gameId, e.getMessage());
+      }
+      game.setGamePhoto(null);
+      gameRepository.save(game);
+      logger.info("Photo deleted for game: {}", gameId);
+    }
   }
 }

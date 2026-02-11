@@ -10,9 +10,13 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SubscriptionRepository extends JpaRepository<Subscription, SubscriptionId> {
 
-  boolean existsByUserEmailAndGameId(String userEmail, UUID gameId);
+  boolean existsByUserIdAndGameId(UUID userId, UUID gameId);
 
-  boolean existsByUserEmailAndGameIdAndIsAdminTrue(String userEmail, UUID gameId);
+  boolean existsByUserIdAndGameIdAndIsAdminTrue(UUID userId, UUID gameId);
 
-  List<Subscription> findByUserEmail(String userEmail);
+  List<Subscription> findByUserId(UUID userId);
+
+  long countByGameId(UUID gameId);
+
+  List<Subscription> findByGameId(UUID gameId);
 }
