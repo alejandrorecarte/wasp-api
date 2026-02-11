@@ -1,10 +1,11 @@
 package org.example.waspapi.controller;
 
-import static org.example.waspapi.Constants.SUPABASE_EMAIL_CLAIM;
+import static org.example.waspapi.Constants.INVALID_FILE_TYPE;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -14,18 +15,23 @@ import org.example.waspapi.dto.requests.game.UpdateGameRequest;
 import org.example.waspapi.dto.requests.subscription.CreateSubscriptionRequest;
 import org.example.waspapi.dto.responses.game.GetGameResponse;
 import org.example.waspapi.dto.responses.game.UpdateGameResponse;
+import org.example.waspapi.exceptions.HandledException;
 import org.example.waspapi.model.Game;
+import org.example.waspapi.model.Subscription;
 import org.example.waspapi.service.GameService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.example.waspapi.service.SubscriptionService;
+import org.example.waspapi.service.SupabaseStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @Tag(name = "Games", description = "Endpoints for managing games")
@@ -35,10 +41,15 @@ public class GameController {
   private static final Logger logger = LoggerFactory.getLogger(GameController.class);
   private final GameService gameService;
   private final SubscriptionService subscriptionService;
+  private final SupabaseStorageService storageService;
 
-  public GameController(GameService gameService, SubscriptionService subscriptionService) {
+  public GameController(
+      GameService gameService,
+      SubscriptionService subscriptionService,
+      SupabaseStorageService storageService) {
     this.gameService = gameService;
     this.subscriptionService = subscriptionService;
+    this.storageService = storageService;
   }
 
   @Operation(
@@ -49,19 +60,23 @@ public class GameController {
   @GetMapping("/me")
   public ResponseEntity<List<GetGameResponse>> getMyGames(
       @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
-    String email = jwt.getClaim(SUPABASE_EMAIL_CLAIM).toString();
-    logger.info("Fetching games for user: {}", email);
+    UUID userId = UUID.fromString(jwt.getSubject());
+    logger.info("Fetching games for user: {}", userId);
     List<GetGameResponse> games =
-        subscriptionService.getGamesByUserEmail(email).stream()
+        subscriptionService.getGamesByUserId(userId).stream()
             .map(
                 game ->
                     new GetGameResponse(
+                        game.getId(),
                         game.getName(),
                         game.getDescription(),
-                        game.getGamePhoto(),
+                        resolvePhoto(game),
                         game.getMaxPlayers(),
                         game.getIsPublic(),
-                        game.getTheme() == null ? null : game.getTheme().getId()))
+                        game.getTheme() == null ? null : game.getTheme().getName(),
+                        game.getMasterUser() == null ? null : game.getMasterUser().getId(),
+                        subscriptionService.countPlayersByGameId(game.getId()),
+                        null))
             .collect(Collectors.toList());
     return ResponseEntity.ok(games);
   }
@@ -69,26 +84,38 @@ public class GameController {
   @Operation(
       summary = "Get public games",
       description =
-          "Returns all public games that are not deleted, with pagination support.",
+          "Returns all public games that are not deleted, with pagination support. "
+              + "Optionally filter by game name and/or theme name (case-insensitive partial match).",
       operationId = "getPublicGames")
   @GetMapping("/public")
   public ResponseEntity<Page<GetGameResponse>> getPublicGames(
       @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+      @RequestParam(required = false) String name,
+      @RequestParam(required = false) String themeName,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size) {
-    logger.info("Fetching public games - page: {}, size: {}", page, size);
+    logger.info(
+        "Fetching public games - name: {}, themeName: {}, page: {}, size: {}",
+        name,
+        themeName,
+        page,
+        size);
     Page<GetGameResponse> games =
         gameService
-            .getPublicGames(PageRequest.of(page, size))
+            .getPublicGames(name, themeName, PageRequest.of(page, size))
             .map(
                 game ->
                     new GetGameResponse(
+                        game.getId(),
                         game.getName(),
                         game.getDescription(),
-                        game.getGamePhoto(),
+                        resolvePhoto(game),
                         game.getMaxPlayers(),
                         game.getIsPublic(),
-                        game.getTheme() == null ? null : game.getTheme().getId()));
+                        game.getTheme() == null ? null : game.getTheme().getName(),
+                        game.getMasterUser() == null ? null : game.getMasterUser().getId(),
+                        subscriptionService.countPlayersByGameId(game.getId()),
+                        null));
     return ResponseEntity.ok(games);
   }
 
@@ -103,11 +130,11 @@ public class GameController {
       @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
       @Valid @RequestBody CreateGameRequest request) {
     logger.info("Creating game with request: {}", request);
-    String auth0Email = jwt.getClaim(SUPABASE_EMAIL_CLAIM).toString();
-    Game game = gameService.createGame(request);
+    UUID userId = UUID.fromString(jwt.getSubject());
+    Game game = gameService.createGame(request, userId);
 
     CreateSubscriptionRequest subscription =
-        new CreateSubscriptionRequest(auth0Email, game.getId(), request.getName(), "OWNER", true);
+        new CreateSubscriptionRequest(userId, game.getId(), request.getName(), "OWNER", true);
     subscriptionService.createSubscription(subscription);
 
     logger.info("Game created successfully with ID: {}", game.getId());
@@ -121,11 +148,10 @@ public class GameController {
       operationId = "getGame")
   @GetMapping("/{gameId}")
   public ResponseEntity<GetGameResponse> getGame(
-      @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
-      @PathVariable UUID gameId) {
+      @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @PathVariable UUID gameId) {
     logger.info("Fetching game with ID: {}", gameId);
-    String auth0Email = jwt.getClaim(SUPABASE_EMAIL_CLAIM).toString();
-    if (!subscriptionService.isSubscribed(auth0Email, gameId)) {
+    UUID userId = UUID.fromString(jwt.getSubject());
+    if (!subscriptionService.isSubscribed(userId, gameId)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
@@ -135,15 +161,45 @@ public class GameController {
     }
     logger.info("Game with ID {} fetched successfully", gameId);
 
+    List<GetGameResponse.PlayerInfo> players =
+        subscriptionService.getSubscriptionsByGameId(gameId).stream()
+            .map(this::toPlayerInfo)
+            .collect(Collectors.toList());
+
     GetGameResponse response =
         new GetGameResponse(
+            game.getId(),
             game.getName(),
             game.getDescription(),
-            game.getGamePhoto(),
+            resolvePhoto(game),
             game.getMaxPlayers(),
             game.getIsPublic(),
-            game.getTheme() == null ? null : game.getTheme().getId());
+            game.getTheme() == null ? null : game.getTheme().getName(),
+            game.getMasterUser() == null ? null : game.getMasterUser().getId(),
+            subscriptionService.countPlayersByGameId(gameId),
+            players);
     return ResponseEntity.ok(response);
+  }
+
+  @Operation(
+      summary = "Get players of a game",
+      description =
+          "Returns all users subscribed to the specified game. The user must be subscribed to the game.",
+      operationId = "getGamePlayers")
+  @GetMapping("/{gameId}/players")
+  public ResponseEntity<List<GetGameResponse.PlayerInfo>> getGamePlayers(
+      @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @PathVariable UUID gameId) {
+    UUID userId = UUID.fromString(jwt.getSubject());
+    logger.info("Fetching players for game: {}", gameId);
+    if (!subscriptionService.isSubscribed(userId, gameId)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    List<GetGameResponse.PlayerInfo> players =
+        subscriptionService.getSubscriptionsByGameId(gameId).stream()
+            .map(this::toPlayerInfo)
+            .collect(Collectors.toList());
+    return ResponseEntity.ok(players);
   }
 
   @Operation(
@@ -191,10 +247,12 @@ public class GameController {
         new UpdateGameResponse(
             game.getName(),
             game.getDescription(),
-            game.getGamePhoto(),
+            resolvePhoto(game),
             game.getMaxPlayers(),
             game.getIsPublic(),
-            game.getTheme() == null ? null : game.getTheme().getId());
+            game.getTheme() == null ? null : game.getTheme().getName(),
+            game.getMasterUser() == null ? null : game.getMasterUser().getId(),
+            subscriptionService.countPlayersByGameId(gameId));
     return ResponseEntity.ok(response);
   }
 
@@ -203,17 +261,78 @@ public class GameController {
       description =
           "Deletes a game by its ID. The user must have admin privileges for the game to perform the deletion.",
       operationId = "deleteGame")
-  @PostMapping("/{gameId}/delete")
+  @DeleteMapping("/{gameId}")
   public ResponseEntity<Void> deleteGame(
-      @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
-      @PathVariable UUID gameId) {
+      @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @PathVariable UUID gameId) {
     logger.info("Deleting game with ID: {}", gameId);
-    if (!subscriptionService.isAdmin(jwt.getClaim(SUPABASE_EMAIL_CLAIM).toString(), gameId)) {
+    UUID userId = UUID.fromString(jwt.getSubject());
+    if (!subscriptionService.isAdmin(userId, gameId)) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     gameService.deleteGame(gameId);
 
     logger.info("Game with ID {} deleted successfully", gameId);
     return ResponseEntity.noContent().build();
+  }
+
+  @Operation(
+      summary = "Upload a game photo",
+      description =
+          "Uploads a photo for a game. The user must have admin privileges. Accepts multipart file upload.",
+      operationId = "uploadGamePhoto")
+  @PostMapping(value = "/{gameId}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<String> uploadGamePhoto(
+      @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID gameId,
+      @RequestParam("file") MultipartFile file)
+      throws IOException {
+    logger.info("Uploading photo for game: {}", gameId);
+    UUID userId = UUID.fromString(jwt.getSubject());
+    if (!subscriptionService.isAdmin(userId, gameId)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    String contentType = file.getContentType();
+    if (contentType == null || !contentType.startsWith("image/")) {
+      throw new HandledException(INVALID_FILE_TYPE, HttpStatus.BAD_REQUEST);
+    }
+
+    String publicUrl = gameService.uploadPhoto(gameId, file.getBytes(), contentType);
+    return ResponseEntity.ok(publicUrl);
+  }
+
+  @Operation(
+      summary = "Delete a game photo",
+      description =
+          "Deletes the photo of a game. The user must have admin privileges for the game.",
+      operationId = "deleteGamePhoto")
+  @DeleteMapping("/{gameId}/photo")
+  public ResponseEntity<Void> deleteGamePhoto(
+      @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @PathVariable UUID gameId) {
+    logger.info("Deleting photo for game: {}", gameId);
+    UUID userId = UUID.fromString(jwt.getSubject());
+    if (!subscriptionService.isAdmin(userId, gameId)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    gameService.deletePhoto(gameId);
+    return ResponseEntity.noContent().build();
+  }
+
+  private String resolvePhoto(Game game) {
+    if (game.getGamePhoto() != null) {
+      return storageService.getPublicUrl("game-photos", game.getGamePhoto());
+    }
+    if (game.getTheme() != null && game.getTheme().getThemePhoto() != null) {
+      return storageService.getPublicUrl("theme-photos", game.getTheme().getThemePhoto());
+    }
+    return null;
+  }
+
+  private GetGameResponse.PlayerInfo toPlayerInfo(Subscription subscription) {
+    return new GetGameResponse.PlayerInfo(
+        subscription.getUser().getId(),
+        subscription.getUser().getNickname(),
+        subscription.getRole(),
+        subscription.getUser().getProfilePhoto());
   }
 }

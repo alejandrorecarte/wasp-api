@@ -1,54 +1,25 @@
 package org.example.waspapi.dto.responses.users;
 
+import java.util.UUID;
+
 public class GetUserResponse {
 
-  private String nickname;
-  private String bio;
-  private String preference;
-  private String disponibility;
+  private UUID id;
   private String profilePhoto;
 
   public GetUserResponse() {}
 
-  public GetUserResponse(
-      String nickname, String bio, String preference, String disponibility, String profilePhoto) {
-    this.nickname = nickname;
-    this.bio = bio;
-    this.preference = preference;
-    this.disponibility = disponibility;
+  public GetUserResponse(UUID id, String profilePhoto) {
+    this.id = id;
     this.profilePhoto = profilePhoto;
   }
 
-  public String getNickname() {
-    return nickname;
+  public UUID getId() {
+    return id;
   }
 
-  public void setNickname(String nickname) {
-    this.nickname = nickname;
-  }
-
-  public String getBio() {
-    return bio;
-  }
-
-  public void setBio(String bio) {
-    this.bio = bio;
-  }
-
-  public String getPreference() {
-    return preference;
-  }
-
-  public void setPreference(String preference) {
-    this.preference = preference;
-  }
-
-  public String getDisponibility() {
-    return disponibility;
-  }
-
-  public void setDisponibility(String disponibility) {
-    this.disponibility = disponibility;
+  public void setId(UUID id) {
+    this.id = id;
   }
 
   public String getProfilePhoto() {

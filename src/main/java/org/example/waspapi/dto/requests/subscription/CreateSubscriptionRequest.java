@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public class CreateSubscriptionRequest {
 
-  private String userEmail;
+  private UUID userId;
   private UUID gameId;
   private String gameNickname;
   private String role;
@@ -13,20 +13,20 @@ public class CreateSubscriptionRequest {
   public CreateSubscriptionRequest() {}
 
   public CreateSubscriptionRequest(
-      String userEmail, UUID gameId, String gameNickname, String role, Boolean isAdmin) {
-    this.userEmail = userEmail;
+      UUID userId, UUID gameId, String gameNickname, String role, Boolean isAdmin) {
+    this.userId = userId;
     this.gameId = gameId;
     this.gameNickname = gameNickname;
     this.role = role;
     this.isAdmin = isAdmin;
   }
 
-  public String getUserEmail() {
-    return userEmail;
+  public UUID getUserId() {
+    return userId;
   }
 
-  public void setUserEmail(String userEmail) {
-    this.userEmail = userEmail;
+  public void setUserId(UUID userId) {
+    this.userId = userId;
   }
 
   public UUID getGameId() {
