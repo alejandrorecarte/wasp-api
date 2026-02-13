@@ -1,6 +1,10 @@
 package org.example.waspapi.service;
 
+import static org.example.waspapi.Constants.ALREADY_SUBSCRIBED;
+import static org.example.waspapi.Constants.CANNOT_LEAVE_AS_OWNER;
+import static org.example.waspapi.Constants.GAME_FULL;
 import static org.example.waspapi.Constants.GAME_NOT_FOUND;
+import static org.example.waspapi.Constants.NOT_SUBSCRIBED;
 import static org.example.waspapi.Constants.USER_NOT_FOUND;
 
 import java.util.List;
@@ -76,25 +80,60 @@ public class SubscriptionService {
    * @return true if the user is subscribed to the game, false otherwise.
    */
   public boolean isSubscribed(UUID userId, UUID gameId) {
-    return subscriptionRepository.existsByUserIdAndGameId(userId, gameId);
+    return subscriptionRepository.existsByUserIdAndGameIdAndIsActiveTrue(userId, gameId);
   }
 
   public boolean isAdmin(UUID userId, UUID gameId) {
-    return subscriptionRepository.existsByUserIdAndGameIdAndIsAdminTrue(userId, gameId);
+    return subscriptionRepository.existsByUserIdAndGameIdAndIsAdminTrueAndIsActiveTrue(
+        userId, gameId);
   }
 
   public long countPlayersByGameId(UUID gameId) {
-    return subscriptionRepository.countByGameId(gameId);
+    return subscriptionRepository.countByGameIdAndIsActiveTrue(gameId);
   }
 
   public List<Subscription> getSubscriptionsByGameId(UUID gameId) {
-    return subscriptionRepository.findByGameId(gameId);
+    return subscriptionRepository.findByGameIdAndIsActiveTrue(gameId);
   }
 
   public List<Game> getGamesByUserId(UUID userId) {
-    return subscriptionRepository.findByUserId(userId).stream()
+    return subscriptionRepository.findByUserIdAndIsActiveTrue(userId).stream()
         .map(Subscription::getGame)
         .filter(game -> !Boolean.TRUE.equals(game.getIsDeleted()))
         .collect(Collectors.toList());
+  }
+
+  public void leaveGame(UUID userId, UUID gameId) {
+    Subscription subscription = subscriptionRepository.findByUserIdAndGameId(userId, gameId);
+    if (subscription == null || !Boolean.TRUE.equals(subscription.getIsActive())) {
+      throw new HandledException(NOT_SUBSCRIBED, HttpStatus.BAD_REQUEST);
+    }
+    if ("OWNER".equals(subscription.getRole())) {
+      throw new HandledException(CANNOT_LEAVE_AS_OWNER, HttpStatus.FORBIDDEN);
+    }
+    subscription.setIsActive(false);
+    subscriptionRepository.save(subscription);
+  }
+
+  public void rejoinGame(UUID userId, UUID gameId) {
+    Subscription subscription = subscriptionRepository.findByUserIdAndGameId(userId, gameId);
+    if (subscription == null) {
+      throw new HandledException(NOT_SUBSCRIBED, HttpStatus.BAD_REQUEST);
+    }
+    if (Boolean.TRUE.equals(subscription.getIsActive())) {
+      throw new HandledException(ALREADY_SUBSCRIBED, HttpStatus.CONFLICT);
+    }
+
+    Game game =
+        gameRepository
+            .findById(gameId)
+            .orElseThrow(() -> new HandledException(GAME_NOT_FOUND, HttpStatus.NOT_FOUND));
+    if (game.getMaxPlayers() != null
+        && subscriptionRepository.countByGameIdAndIsActiveTrue(gameId) >= game.getMaxPlayers()) {
+      throw new HandledException(GAME_FULL, HttpStatus.CONFLICT);
+    }
+
+    subscription.setIsActive(true);
+    subscriptionRepository.save(subscription);
   }
 }

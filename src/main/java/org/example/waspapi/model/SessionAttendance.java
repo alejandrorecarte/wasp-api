@@ -3,9 +3,9 @@ package org.example.waspapi.model;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "users_events")
-@IdClass(EventAttendanceId.class)
-public class EventAttendance {
+@Table(name = "users_sessions")
+@IdClass(SessionAttendanceId.class)
+public class SessionAttendance {
 
   @Id
   @ManyToOne(fetch = FetchType.LAZY)
@@ -14,8 +14,8 @@ public class EventAttendance {
 
   @Id
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "event_id", referencedColumnName = "event_id")
-  private Event event;
+  @JoinColumn(name = "session_id", referencedColumnName = "session_id")
+  private Session session;
 
   @Column(name = "confirm_assist")
   private Boolean confirmAssist;
@@ -28,12 +28,12 @@ public class EventAttendance {
     this.user = user;
   }
 
-  public Event getEvent() {
-    return event;
+  public Session getSession() {
+    return session;
   }
 
-  public void setEvent(Event event) {
-    this.event = event;
+  public void setSession(Session session) {
+    this.session = session;
   }
 
   public Boolean getConfirmAssist() {

@@ -10,6 +10,7 @@ import static org.example.waspapi.Constants.USER_NOT_FOUND;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.example.waspapi.dto.requests.subscription.CreateSubscriptionRequest;
 import org.example.waspapi.exceptions.HandledException;
 import org.example.waspapi.model.Game;
@@ -34,18 +35,21 @@ public class JoinRequestService {
   private final GameRepository gameRepository;
   private final SubscriptionRepository subscriptionRepository;
   private final SubscriptionService subscriptionService;
+  private final NotificationService notificationService;
 
   public JoinRequestService(
       JoinRequestRepository joinRequestRepository,
       UserRepository userRepository,
       GameRepository gameRepository,
       SubscriptionRepository subscriptionRepository,
-      SubscriptionService subscriptionService) {
+      SubscriptionService subscriptionService,
+      NotificationService notificationService) {
     this.joinRequestRepository = joinRequestRepository;
     this.userRepository = userRepository;
     this.gameRepository = gameRepository;
     this.subscriptionRepository = subscriptionRepository;
     this.subscriptionService = subscriptionService;
+    this.notificationService = notificationService;
   }
 
   public JoinRequest create(UUID userId, UUID gameId, String message) {
@@ -70,15 +74,23 @@ public class JoinRequestService {
     }
 
     if (game.getMaxPlayers() != null
-        && subscriptionRepository.countByGameId(gameId) >= game.getMaxPlayers()) {
+        && subscriptionRepository.countByGameIdAndIsActiveTrue(gameId) >= game.getMaxPlayers()) {
       throw new HandledException(GAME_FULL, HttpStatus.CONFLICT);
     }
 
     JoinRequest joinRequest = new JoinRequest(user, game, message, "PENDING");
     joinRequest.setCreatedAt(Instant.now());
 
+    JoinRequest saved = joinRequestRepository.save(joinRequest);
     logger.info("Join request created for user {} on game {}", userId, gameId);
-    return joinRequestRepository.save(joinRequest);
+
+    List<UUID> adminIds =
+        subscriptionRepository.findByGameIdAndIsActiveTrue(gameId).stream()
+            .filter(s -> Boolean.TRUE.equals(s.getAdmin()))
+            .map(s -> s.getUser().getId())
+            .collect(Collectors.toList());
+    notificationService.createForMany(adminIds, "JOIN_REQUEST", saved.getId());
+    return saved;
   }
 
   public boolean existsByUserAndGame(UUID userId, UUID gameId) {
@@ -111,6 +123,7 @@ public class JoinRequestService {
 
     logger.info(
         "Join request {} accepted, subscription created for user {}", requestId, user.getId());
+    notificationService.create(user.getId(), "JOIN_REQUEST_ACCEPTED", joinRequest.getId());
     return joinRequest;
   }
 

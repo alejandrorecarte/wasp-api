@@ -49,6 +49,7 @@ public class GameService {
     Game game = new Game();
     game.setName(request.getName());
     game.setDescription(request.getDescription());
+    game.setLore(request.getLore());
     game.setMaxPlayers(request.getMaxPlayers());
     game.setIsPublic(request.getPublic());
     game.setIsDeleted(false);
@@ -92,6 +93,9 @@ public class GameService {
     }
     if (request.getDescription() != null) {
       game.setDescription(request.getDescription());
+    }
+    if (request.getLore() != null) {
+      game.setLore(request.getLore());
     }
     if (request.getMaxPlayers() != null) {
       game.setMaxPlayers(request.getMaxPlayers());

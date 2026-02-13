@@ -6,6 +6,7 @@ public class UpdateGameResponse {
 
   private String name;
   private String description;
+  private String lore;
   private String gamePhoto;
   private Short maxPlayers;
   private Boolean isPublic;
@@ -18,6 +19,7 @@ public class UpdateGameResponse {
   public UpdateGameResponse(
       String name,
       String description,
+      String lore,
       String gamePhoto,
       Short maxPlayers,
       Boolean isPublic,
@@ -26,6 +28,7 @@ public class UpdateGameResponse {
       long playerCount) {
     this.name = name;
     this.description = description;
+    this.lore = lore;
     this.gamePhoto = gamePhoto;
     this.maxPlayers = maxPlayers;
     this.isPublic = isPublic;
@@ -48,6 +51,14 @@ public class UpdateGameResponse {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public String getLore() {
+    return lore;
+  }
+
+  public void setLore(String lore) {
+    this.lore = lore;
   }
 
   public String getGamePhoto() {

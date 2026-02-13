@@ -1,17 +1,17 @@
-package org.example.waspapi.dto.responses.event;
+package org.example.waspapi.dto.responses.session;
 
 import java.util.UUID;
 
-public class GetEventAttendanceResponse {
+public class GetSessionAttendanceResponse {
 
   private UUID userId;
   private String nickname;
   private String profilePhoto;
   private Boolean confirmAssist;
 
-  public GetEventAttendanceResponse() {}
+  public GetSessionAttendanceResponse() {}
 
-  public GetEventAttendanceResponse(
+  public GetSessionAttendanceResponse(
       UUID userId, String nickname, String profilePhoto, Boolean confirmAssist) {
     this.userId = userId;
     this.nickname = nickname;

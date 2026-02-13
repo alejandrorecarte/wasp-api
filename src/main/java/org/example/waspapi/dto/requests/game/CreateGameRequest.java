@@ -11,6 +11,8 @@ public class CreateGameRequest {
 
   private String description;
 
+  private String lore;
+
   @Min(1)
   @Max(99)
   private Short maxPlayers;
@@ -44,6 +46,14 @@ public class CreateGameRequest {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public String getLore() {
+    return lore;
+  }
+
+  public void setLore(String lore) {
+    this.lore = lore;
   }
 
   public Short getMaxPlayers() {

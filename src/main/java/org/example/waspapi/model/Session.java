@@ -1,28 +1,44 @@
-package org.example.waspapi.dto.requests.event;
+package org.example.waspapi.model;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
+import javax.persistence.*;
 
-public class UpdateEventRequest {
+@Entity
+@Table(name = "sessions", schema = "public")
+public class Session {
 
-  private String name;
+  @Id
+  @GeneratedValue
+  @Column(name = "session_id", updatable = false, nullable = false)
+  private UUID id;
 
+  @Column private String name;
+
+  @Column(name = "is_presential")
   private Boolean isPresential;
 
+  @Column(columnDefinition = "timestamptz")
   private LocalDateTime datetime;
 
+  @Column(columnDefinition = "text")
   private String place;
 
+  @Column(columnDefinition = "text")
   private String observations;
 
-  public UpdateEventRequest() {}
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "game_id", foreignKey = @ForeignKey(name = "sessions_game_id_fkey"))
+  private Game game;
 
-  public UpdateEventRequest(
-      String name, Boolean isPresential, LocalDateTime datetime, String place, String observations) {
-    this.name = name;
-    this.isPresential = isPresential;
-    this.datetime = datetime;
-    this.place = place;
-    this.observations = observations;
+  public Session() {}
+
+  public UUID getId() {
+    return id;
+  }
+
+  public void setId(UUID id) {
+    this.id = id;
   }
 
   public String getName() {
@@ -63,5 +79,13 @@ public class UpdateEventRequest {
 
   public void setObservations(String observations) {
     this.observations = observations;
+  }
+
+  public Game getGame() {
+    return game;
+  }
+
+  public void setGame(Game game) {
+    this.game = game;
   }
 }

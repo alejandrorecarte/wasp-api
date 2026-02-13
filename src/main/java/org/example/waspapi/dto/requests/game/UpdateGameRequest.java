@@ -8,6 +8,7 @@ public class UpdateGameRequest {
 
   private String name;
   private String description;
+  private String lore;
 
   @Min(1)
   @Max(99)
@@ -41,6 +42,14 @@ public class UpdateGameRequest {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public String getLore() {
+    return lore;
+  }
+
+  public void setLore(String lore) {
+    this.lore = lore;
   }
 
   public Short getMaxPlayers() {
