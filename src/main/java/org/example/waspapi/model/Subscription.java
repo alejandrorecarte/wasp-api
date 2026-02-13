@@ -26,6 +26,9 @@ public class Subscription {
   @Column(name = "is_admin")
   private Boolean isAdmin;
 
+  @Column(name = "is_active")
+  private Boolean isActive = true;
+
   public User getUser() {
     return user;
   }
@@ -64,5 +67,13 @@ public class Subscription {
 
   public void setAdmin(Boolean admin) {
     isAdmin = admin;
+  }
+
+  public Boolean getIsActive() {
+    return isActive;
+  }
+
+  public void setIsActive(Boolean isActive) {
+    this.isActive = isActive;
   }
 }

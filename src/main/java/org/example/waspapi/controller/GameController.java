@@ -70,6 +70,7 @@ public class GameController {
                         game.getId(),
                         game.getName(),
                         game.getDescription(),
+                        game.getLore(),
                         resolvePhoto(game),
                         game.getMaxPlayers(),
                         game.getIsPublic(),
@@ -109,6 +110,7 @@ public class GameController {
                         game.getId(),
                         game.getName(),
                         game.getDescription(),
+                        game.getLore(),
                         resolvePhoto(game),
                         game.getMaxPlayers(),
                         game.getIsPublic(),
@@ -171,6 +173,7 @@ public class GameController {
             game.getId(),
             game.getName(),
             game.getDescription(),
+            game.getLore(),
             resolvePhoto(game),
             game.getMaxPlayers(),
             game.getIsPublic(),
@@ -212,32 +215,10 @@ public class GameController {
       @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
       @PathVariable UUID gameId,
       @Valid @RequestBody UpdateGameRequest request) {
-    try {
-      logger.info("Updating game with ID: {} and request: {}", gameId, request);
-      String emailClaim = jwt.getClaim(AUTH0_AUDIENCE_EMAIL).toString();
-      if (!subscriptionService.isAdmin(emailClaim, gameId)) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-      }
-      Game game = gameService.updateGame(gameId, request);
-
-      logger.info("Game with ID {} updated successfully", gameId);
-
-      UpdateGameResponse response =
-          new UpdateGameResponse(
-              game.getName(),
-              game.getDescription(),
-              game.getGamePhoto(),
-              game.getMaxPlayers(),
-              game.getIsPublic(),
-              game.getTheme() == null ? null : game.getTheme().getId());
-      logger.info("Game updated response: {}", response);
-      return ResponseEntity.ok(response);
-    } catch (HandledException e) {
-      logger.error("Handled exception while update game: {}", e.getMessage());
-      return ResponseEntity.status(e.getStatusCode()).body(null);
-    } catch (Exception e) {
-      logger.error("Error updating game: {}", e.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    logger.info("Updating game with ID: {} and request: {}", gameId, request);
+    UUID userId = UUID.fromString(jwt.getSubject());
+    if (!subscriptionService.isAdmin(userId, gameId)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     Game game = gameService.updateGame(gameId, request);
 
@@ -247,6 +228,7 @@ public class GameController {
         new UpdateGameResponse(
             game.getName(),
             game.getDescription(),
+            game.getLore(),
             resolvePhoto(game),
             game.getMaxPlayers(),
             game.getIsPublic(),
@@ -254,6 +236,37 @@ public class GameController {
             game.getMasterUser() == null ? null : game.getMasterUser().getId(),
             subscriptionService.countPlayersByGameId(gameId));
     return ResponseEntity.ok(response);
+  }
+
+  @Operation(
+      summary = "Leave a game",
+      description =
+          "Allows the authenticated user to leave a game. The game owner cannot leave. "
+              + "The user can rejoin later without needing admin approval.",
+      operationId = "leaveGame")
+  @PostMapping("/{gameId}/leave")
+  public ResponseEntity<Void> leaveGame(
+      @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @PathVariable UUID gameId) {
+    UUID userId = UUID.fromString(jwt.getSubject());
+    logger.info("User {} leaving game {}", userId, gameId);
+    subscriptionService.leaveGame(userId, gameId);
+    logger.info("User {} left game {}", userId, gameId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Operation(
+      summary = "Rejoin a game",
+      description =
+          "Allows a user who previously left a game to rejoin it without needing admin approval.",
+      operationId = "rejoinGame")
+  @PostMapping("/{gameId}/rejoin")
+  public ResponseEntity<Void> rejoinGame(
+      @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @PathVariable UUID gameId) {
+    UUID userId = UUID.fromString(jwt.getSubject());
+    logger.info("User {} rejoining game {}", userId, gameId);
+    subscriptionService.rejoinGame(userId, gameId);
+    logger.info("User {} rejoined game {}", userId, gameId);
+    return ResponseEntity.noContent().build();
   }
 
   @Operation(

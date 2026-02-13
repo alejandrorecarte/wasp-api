@@ -28,11 +28,15 @@ public class FriendRequestService {
 
   private final FriendRequestRepository friendRequestRepository;
   private final UserRepository userRepository;
+  private final NotificationService notificationService;
 
   public FriendRequestService(
-      FriendRequestRepository friendRequestRepository, UserRepository userRepository) {
+      FriendRequestRepository friendRequestRepository,
+      UserRepository userRepository,
+      NotificationService notificationService) {
     this.friendRequestRepository = friendRequestRepository;
     this.userRepository = userRepository;
+    this.notificationService = notificationService;
   }
 
   public FriendRequest create(UUID senderId, UUID receiverId) {
@@ -68,8 +72,10 @@ public class FriendRequestService {
 
     FriendRequest friendRequest = new FriendRequest(sender, receiver, "PENDING");
 
+    FriendRequest saved = friendRequestRepository.save(friendRequest);
     logger.info("Friend request created from {} to {}", senderId, receiverId);
-    return friendRequestRepository.save(friendRequest);
+    notificationService.create(receiverId, "FRIEND_REQUEST", saved.getId());
+    return saved;
   }
 
   public List<FriendRequest> getPendingReceived(UUID userId) {
@@ -91,9 +97,12 @@ public class FriendRequestService {
     }
 
     friendRequest.setStatus("ACCEPTED");
+    FriendRequest saved = friendRequestRepository.save(friendRequest);
 
     logger.info("Friend request {} accepted", requestId);
-    return friendRequestRepository.save(friendRequest);
+    notificationService.create(
+        friendRequest.getSender().getId(), "FRIEND_REQUEST_ACCEPTED", saved.getId());
+    return saved;
   }
 
   public FriendRequest reject(UUID requestId, UUID userId) {
@@ -131,6 +140,15 @@ public class FriendRequestService {
     }
 
     return friends;
+  }
+
+  public boolean areFriends(UUID userId, UUID friendUserId) {
+    Optional<FriendRequest> requestAtoB =
+        friendRequestRepository.findBySenderIdAndReceiverId(userId, friendUserId);
+    Optional<FriendRequest> requestBtoA =
+        friendRequestRepository.findBySenderIdAndReceiverId(friendUserId, userId);
+    return (requestAtoB.isPresent() && "ACCEPTED".equals(requestAtoB.get().getStatus()))
+        || (requestBtoA.isPresent() && "ACCEPTED".equals(requestBtoA.get().getStatus()));
   }
 
   public void removeFriend(UUID userId, UUID friendUserId) {

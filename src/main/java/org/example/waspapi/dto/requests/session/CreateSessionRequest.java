@@ -1,9 +1,9 @@
-package org.example.waspapi.dto.requests.event;
+package org.example.waspapi.dto.requests.session;
 
 import java.time.LocalDateTime;
 import javax.validation.constraints.NotNull;
 
-public class CreateEventRequest {
+public class CreateSessionRequest {
 
   private String name;
 
@@ -15,10 +15,14 @@ public class CreateEventRequest {
 
   private String observations;
 
-  public CreateEventRequest() {}
+  public CreateSessionRequest() {}
 
-  public CreateEventRequest(
-      String name, Boolean isPresential, LocalDateTime datetime, String place, String observations) {
+  public CreateSessionRequest(
+      String name,
+      Boolean isPresential,
+      LocalDateTime datetime,
+      String place,
+      String observations) {
     this.name = name;
     this.isPresential = isPresential;
     this.datetime = datetime;

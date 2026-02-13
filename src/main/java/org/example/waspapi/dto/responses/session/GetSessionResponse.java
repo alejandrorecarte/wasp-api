@@ -1,9 +1,9 @@
-package org.example.waspapi.dto.responses.event;
+package org.example.waspapi.dto.responses.session;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public class GetEventResponse {
+public class GetSessionResponse {
 
   private UUID id;
   private String name;
@@ -12,11 +12,12 @@ public class GetEventResponse {
   private String place;
   private String observations;
   private UUID gameId;
+  private String gameName;
   private long confirmedCount;
 
-  public GetEventResponse() {}
+  public GetSessionResponse() {}
 
-  public GetEventResponse(
+  public GetSessionResponse(
       UUID id,
       String name,
       Boolean isPresential,
@@ -24,6 +25,7 @@ public class GetEventResponse {
       String place,
       String observations,
       UUID gameId,
+      String gameName,
       long confirmedCount) {
     this.id = id;
     this.name = name;
@@ -32,6 +34,7 @@ public class GetEventResponse {
     this.place = place;
     this.observations = observations;
     this.gameId = gameId;
+    this.gameName = gameName;
     this.confirmedCount = confirmedCount;
   }
 
@@ -89,6 +92,14 @@ public class GetEventResponse {
 
   public void setGameId(UUID gameId) {
     this.gameId = gameId;
+  }
+
+  public String getGameName() {
+    return gameName;
+  }
+
+  public void setGameName(String gameName) {
+    this.gameName = gameName;
   }
 
   public long getConfirmedCount() {

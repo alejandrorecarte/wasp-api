@@ -18,6 +18,9 @@ public class Game {
   @Column(columnDefinition = "text")
   private String description;
 
+  @Column(columnDefinition = "text")
+  private String lore;
+
   @Column(name = "game_photo")
   private String gamePhoto;
 
@@ -78,6 +81,14 @@ public class Game {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public String getLore() {
+    return lore;
+  }
+
+  public void setLore(String lore) {
+    this.lore = lore;
   }
 
   public String getGamePhoto() {

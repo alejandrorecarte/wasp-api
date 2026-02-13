@@ -16,6 +16,8 @@ public class Constants {
       "A join request already exists for this game";
 
   public static final String GAME_FULL = "The game is already full";
+  public static final String CANNOT_LEAVE_AS_OWNER = "The game owner cannot leave the game";
+  public static final String NOT_SUBSCRIBED = "User is not subscribed to this game";
 
   public static final String FRIEND_REQUEST_NOT_FOUND = "Friend request not found";
   public static final String FRIEND_REQUEST_ALREADY_EXISTS =
@@ -27,6 +29,16 @@ public class Constants {
   public static final String PHOTO_UPLOAD_FAILED = "Failed to upload photo";
   public static final String INVALID_FILE_TYPE = "Invalid file type. Only images are allowed";
 
-  public static final String EVENT_NOT_FOUND = "Event not found";
+  public static final String SESSION_NOT_FOUND = "Session not found";
   public static final String ATTENDANCE_NOT_FOUND = "Attendance not found";
+
+  public static final String MESSAGE_CONTENT_EMPTY = "Message content cannot be empty";
+
+  public static final String NOT_FRIENDS = "Users are not friends";
+  public static final String PRIVATE_MESSAGE_CONTENT_EMPTY =
+      "Private message content cannot be empty";
+
+  public static final String NOTIFICATION_NOT_FOUND = "Notification not found";
+
+  public static final String CHARACTER_SHEET_NOT_FOUND = "Character sheet not found";
 }

@@ -12,11 +12,15 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Subs
 
   boolean existsByUserIdAndGameId(UUID userId, UUID gameId);
 
-  boolean existsByUserIdAndGameIdAndIsAdminTrue(UUID userId, UUID gameId);
+  boolean existsByUserIdAndGameIdAndIsActiveTrue(UUID userId, UUID gameId);
 
-  List<Subscription> findByUserId(UUID userId);
+  boolean existsByUserIdAndGameIdAndIsAdminTrueAndIsActiveTrue(UUID userId, UUID gameId);
 
-  long countByGameId(UUID gameId);
+  List<Subscription> findByUserIdAndIsActiveTrue(UUID userId);
 
-  List<Subscription> findByGameId(UUID gameId);
+  long countByGameIdAndIsActiveTrue(UUID gameId);
+
+  List<Subscription> findByGameIdAndIsActiveTrue(UUID gameId);
+
+  Subscription findByUserIdAndGameId(UUID userId, UUID gameId);
 }
